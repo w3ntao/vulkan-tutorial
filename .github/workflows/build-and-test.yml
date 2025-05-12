@@ -1,0 +1,53 @@
+name: build
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: install vulkan
+      run:
+        wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -;
+        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.4.313-noble.list https://packages.lunarg.com/vulkan/1.4.313/lunarg-vulkan-1.4.313-noble.list;
+        sudo apt update;
+        sudo apt install -y vulkan-sdk vulkan-tools libvulkan-dev vulkan-validationlayers;
+        # from https://vulkan.lunarg.com/sdk/home#linux
+
+    - name: install dependencies
+      run:
+        sudo apt install -y cmake xvfb spirv-tools libglm-dev libxkbcommon-dev libwayland-dev libxrandr-dev libxxf86vm-dev libxi-dev libxinerama-dev libxcursor-dev
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: build
+      run:
+        mkdir build;
+        cd build;
+        cmake ..;
+        make -j2;
+        # `make -j` could crash CI instances because of limited memory
+
+    - name: test-with-xvfb
+      run:
+        cd build;
+        ls vk_tutorial;
+        { timeout 10s xvfb-run -a ./vk_tutorial; return_code=$?; } || true;
+        [ $return_code = 124 ];
+
+        # let the program run for 10 seconds and kill it
+        # then check if returned code from timeout is 124
+
+        # xvfb-run: emulate fake frame buffer
+        # timeout 10s: kill the program after 10 seconds
+        # 124: the COMMAND executes and then times out successfully 
