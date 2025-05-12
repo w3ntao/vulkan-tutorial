@@ -24,7 +24,7 @@ jobs:
 
     - name: install dependencies
       run:
-        sudo apt install -y cmake xvfb spirv-tools libglm-dev libxkbcommon-dev libwayland-dev libxrandr-dev libxxf86vm-dev libxi-dev libxinerama-dev libxcursor-dev
+        sudo apt install -y cmake xvfb spirv-tools libglfw3-dev libglm-dev libxkbcommon-dev libwayland-dev libxrandr-dev libxxf86vm-dev libxi-dev libxinerama-dev libxcursor-dev
 
     - uses: actions/checkout@v4
       with:
